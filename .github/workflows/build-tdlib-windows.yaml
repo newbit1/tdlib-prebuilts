@@ -48,7 +48,7 @@ jobs:
           #    ./vcpkg.exe install gperf:x64-windows openssl:x64-windows zlib:x64-windows        
       
       - name: Build TDLib Windows x64 Release
-        if: env.UPDATE_TDLIB == 'true'
+        if: ${{ env.UPDATE_TDLIB == 'true' }}
         shell: bash
         run: |
           cd td
@@ -85,7 +85,7 @@ jobs:
             fi
 
       - name: Build TDLib macOS x86_64 Debug
-        if: env.UPDATE_TDLIB == 'true'
+        if: ${{ env.UPDATE_TDLIB == 'true' }}
         shell: bash
         run: |
           cd td
@@ -94,7 +94,7 @@ jobs:
             BITNESS="x64"                    
 
       - name: Upload To Artifacts Dir
-        if: env.UPDATE_TDLIB == 'true'
+        if: ${{ env.UPDATE_TDLIB == 'true' }}
         uses: actions/upload-artifact@v4
         with:
           name: ArtifactsDir
@@ -102,14 +102,14 @@ jobs:
           retention-days: 1
 
       - name: Download All Artifacts
-        if: env.UPDATE_TDLIB == 'true'
+        if: ${{ env.UPDATE_TDLIB == 'true' }}
         uses: actions/download-artifact@v4
         with:
           name: ArtifactsDir
           path: artifacts
 
       - name: Upload to Telegram
-        if: env.UPDATE_TDLIB == 'true'
+        if: ${{ env.UPDATE_TDLIB == 'true' }}
         env:
           API_ID: ${{ secrets.TELEGRAM_API_ID }}
           API_HASH: ${{ secrets.TELEGRAM_API_HASH }}
@@ -117,6 +117,7 @@ jobs:
           CHAT_ID: ${{ secrets.TELEGRAM_CHANNEL_ID }}
           MESSAGE_THREAD_ID: ${{ secrets.MESSAGE_THREAD_ID }}
           COMMIT_MESSAGE: ${{ env.commit_message }}
+        shell: bash
         run: |
           if [ ! -z "${{ secrets.TELEGRAM_BOT_TOKEN }}" ]; then
             pip3 install Telethon==1.41.2
@@ -126,4 +127,4 @@ jobs:
               ls -l
             python3 $TGUPLOAD $TG_UPLOAD_FILES
           fi
-        shell: bash
+        
