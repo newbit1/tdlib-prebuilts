@@ -102,7 +102,7 @@ jobs:
             
       - name: Debug List Artifacts Directory
         if: ${{ env.UPDATE_TDLIB == 'true' }}
-        shell: bash  # Oder pwsh, je nach deinem Setup
+        shell: bash
         run: |
           echo "Current working directory: $(pwd)"
           echo "Artifact dir: ${{ env.ARTIFACT_DIR }}"
@@ -114,7 +114,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ArtifactsDir
-          path: ${{ env.ARTIFACT_DIR }}/*.zip
+          path: "${{ env.ARTIFACT_DIR }}/*.zip"
           retention-days: 1
           if-no-files-found: ignore
 
@@ -123,7 +123,16 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ArtifactsDir
-          path: ${{ env.ARTIFACT_DIR }}/
+          path: "${{ env.ARTIFACT_DIR }}"
+          retention-days: 1
+          if-no-files-found: ignore
+
+      - name: Upload To Artifacts Dir
+        if: ${{ env.UPDATE_TDLIB == 'true' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: ArtifactsDir
+          path: artifacts
           retention-days: 1
           if-no-files-found: ignore
 
