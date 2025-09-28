@@ -162,4 +162,3 @@ jobs:
               ls -l
             python3 $TGUPLOAD $TG_UPLOAD_FILES
           fi
-        
