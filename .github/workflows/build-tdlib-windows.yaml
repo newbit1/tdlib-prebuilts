@@ -99,15 +99,6 @@ jobs:
             BUILD_TYPE="Debug"
             SYSTEM="Windows"
             BITNESS="x64"
-            
-      - name: Debug List Artifacts Directory
-        if: ${{ env.UPDATE_TDLIB == 'true' }}
-        shell: bash
-        run: |
-          echo "Current working directory: $(pwd)"
-          echo "Artifact dir: ${{ env.ARTIFACT_DIR }}"
-          ls -la ${{ env.ARTIFACT_DIR }} || dir ${{ env.ARTIFACT_DIR }}
-          echo "Looking for ZIP: ${{ env.ARTIFACT_DIR }}/*.zip"
           
       - name: Upload To Artifacts Dir
         if: ${{ env.UPDATE_TDLIB == 'true' }}
@@ -115,24 +106,6 @@ jobs:
         with:
           name: ArtifactsDir
           path: "artifacts/*.zip"
-          retention-days: 1
-          if-no-files-found: ignore
-
-      - name: Upload To Artifacts Dir
-        if: ${{ env.UPDATE_TDLIB == 'true' }}
-        uses: actions/upload-artifact@v4
-        with:
-          name: ArtifactsDir
-          path: artifacts/*.zip
-          retention-days: 1
-          if-no-files-found: ignore
-
-      - name: Upload To Artifacts Dir
-        if: ${{ env.UPDATE_TDLIB == 'true' }}
-        uses: actions/upload-artifact@v4
-        with:
-          name: ArtifactsDir
-          path: artifacts
           retention-days: 1
           if-no-files-found: ignore
 
