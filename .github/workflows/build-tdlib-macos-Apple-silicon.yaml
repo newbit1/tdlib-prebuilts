@@ -55,7 +55,7 @@ jobs:
           env.UPDATE_TDLIB == 'true' && steps.cache-lookup.outputs.cache-hit == 'true'
         run: rm -rf td
 
-      - name: Restore Cache (only if hit)
+      - name: Restore Cache
         if: |
           env.UPDATE_TDLIB == 'true' && steps.cache-lookup.outputs.cache-hit == 'true'
         id: cache-restore
@@ -64,24 +64,29 @@ jobs:
           path: td
           key: ${{ runner.os }}-openssl-${{ env.version }}-${{ hashFiles('td/example/ios/build-openssl.sh') }}
 
-      - name: Build OpenSSL for iOS watchOS tvOS visionOS and macOS (only if miss)
+      - name: Build OpenSSL for iOS watchOS tvOS visionOS and macOS
         if: |
           env.UPDATE_TDLIB == 'true' && steps.cache-lookup.outputs.cache-hit != 'true'
         run: |
           cd td/example/ios
-          SYSTEM="iOS-watchOS-tvOS-visionOS-macOS"             
-          echo "Building OpenSSL for $SYSTEM"
-          ./build-openssl.sh
+            SYSTEM="iOS-watchOS-tvOS-visionOS-macOS"             
+            echo "Building OpenSSL for $SYSTEM"
+            ./build-openssl.sh
 
-      - name: Save Cache (only if miss)
+      - name: Save Cache
         if: |
           env.UPDATE_TDLIB == 'true' && steps.cache-lookup.outputs.cache-hit != 'true'
         id: cache-save
         uses: actions/cache@v4
         with:
           path: td
-          key: ${{ runner.os }}-openssl-${{ env.version }}-${{ hashFiles('td/example/ios/build-openssl.sh') }}  # Gleicher Key – speichert den gebauten Stand
+          key: ${{ runner.os }}-openssl-${{ env.version }}-${{ hashFiles('td/example/ios/build-openssl.sh') }}
 
+      - name: Debug Cache
+        if: env.UPDATE_TDLIB == 'true'
+        run: |
+          echo "UPDATE_TDLIB=false" >> "$GITHUB_ENV"
+          
       - name: Build TDLib for iOS watchOS tvOS visionOS and macOS universal Release
         if: env.UPDATE_TDLIB == 'true'
         run: |
@@ -104,7 +109,7 @@ jobs:
             cd $TDLIB_DIR && zip -r -s 1g "$ARTIFACT_DIR/$TDLIB_ZIP" .
 
       - name: Build TDLib for iOS watchOS tvOS visionOS and macOS universal Debug
-        if: env.UPDATE_TDLIB == 'false'
+        if: env.UPDATE_TDLIB == 'true'
         run: |
           cd td/example/ios
             BUILD_TYPE="Debug"
