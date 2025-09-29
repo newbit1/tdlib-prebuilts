@@ -58,7 +58,7 @@ jobs:
             echo "Building TDLib for $SYSTEM $HOST_ARCH $BUILD_TYPE"    
             TDLIB_DIR="${PWD}/tdjson"
             TDLIB_ZIP="tdlib-$SYSTEM-$HOST_ARCH-$BUILD_TYPE-$version.zip"
-            rm -rf $TDLIB_DIR"
+            rm -rf $TDLIB_DIR
 
             echo "sed'ing make to maximum cores"
             sed -i '' 's/make -j3 install/make -j$(sysctl -n hw.ncpu) install/g' build.sh
@@ -79,6 +79,7 @@ jobs:
             echo "Building TDLib for $SYSTEM $HOST_ARCH $BUILD_TYPE"    
             TDLIB_DIR="${PWD}/tdjson"
             TDLIB_ZIP="tdlib-$SYSTEM-$HOST_ARCH-$BUILD_TYPE-$version.zip"
+            rm -rf $TDLIB_DIR
 
             echo "sed'ing build type Release to Debug"
             sed -i '' 's/DCMAKE_BUILD_TYPE=Release/DCMAKE_BUILD_TYPE=Debug/g' build.sh
