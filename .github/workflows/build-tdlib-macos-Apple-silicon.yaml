@@ -128,7 +128,7 @@ jobs:
           df -h .
           cd td/example/ios
             rm -rf openssl-* Python-Apple-support/merge
-          cd ..
+          cd -
 
           echo "checking space after openssl and before tmp"
           df -h .
@@ -144,16 +144,12 @@ jobs:
 
           rm -rf ~/Library/Developer/Xcode/DerivedData
           rm -rf ~/Library/Caches/com.apple.dt.Xcode
-          cd td && git gc --aggressive --prune=now
+          cd td
+            git gc --aggressive --prune=now
+            rm -rf .git
           cd ..
           echo "checking space after cache cleanup"
-          df -h .
-          
-      - name: Maximize Disk Space
-        if: env.UPDATE_TDLIB == 'true'
-        uses: easimon/maximize-build-space@master
-        with:
-          remove_dotgit: true
+          df -h .          
 
       - name: Check Disk Space After
         run: df -h .
