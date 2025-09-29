@@ -28,15 +28,17 @@ jobs:
             echo "UPDATE_TDLIB=true" >> "$GITHUB_ENV"
           cd -
 
-      - name: Install vcpkg
+      - name: Install vcpkg x64
         if: ${{ env.UPDATE_TDLIB == 'true' }}
         shell: bash
         run: |
           HOST_ARCH=$(uname -m)
+          BITNESS="x64"
           mkdir -p artifacts && ARTIFACT_DIR="${PWD}/artifacts"
           echo "ARTIFACT_DIR=$ARTIFACT_DIR"
           echo "HOST_ARCH=$HOST_ARCH" >> "$GITHUB_ENV"
           echo "ARTIFACT_DIR=$ARTIFACT_DIR" >> "$GITHUB_ENV"
+          echo "BITNESS=$BITNESS" >> "$GITHUB_ENV"
           printf "commit_message<<EOF\n%s\n%s\nEOF\n" "TDLib Prebuilt Binaries $version" "$commit_hash Update version to $version" >> "$GITHUB_ENV"
           
           cd td
@@ -44,7 +46,7 @@ jobs:
             cd vcpkg
               git checkout bc3512a509f9d29b37346a7e7e929f9a26e66c7e
               ./bootstrap-vcpkg.bat
-              ./vcpkg.exe install gperf:x64-windows openssl:x64-windows zlib:x64-windows        
+              ./vcpkg.exe install gperf:$BITNESS-windows openssl:$BITNESS-windows zlib:$BITNESS-windows        
       
       - name: Build TDLib Windows x64 Release
         if: ${{ env.UPDATE_TDLIB == 'true' }}
@@ -53,7 +55,6 @@ jobs:
           cd td
             BUILD_TYPE="Release"
             SYSTEM="Windows"
-            BITNESS="x64"
             echo "Building TDLib for $SYSTEM $HOST_ARCH $BITNESS $BUILD_TYPE"
             TDLIB_DIR="${PWD}/tdlib"
             TDLIB_ZIP="tdlib-$SYSTEM-$HOST_ARCH-$BITNESS-$BUILD_TYPE-$version.zip"
@@ -65,7 +66,7 @@ jobs:
             cd ..
 
             echo "compressing to $ARTIFACT_DIR/$TDLIB_ZIP $TDLIB_FILES/*"
-            jar -cMf $ARTIFACT_DIR/$TDLIB_ZIP $TDLIB_FILES/*
+            jar -cMf $ARTIFACT_DIR/$TDLIB_ZIP $TDLIB_FILES/* 
 
       - name: Build TDLib Windows x64 Debug
         if: ${{ env.UPDATE_TDLIB == 'true' }}
@@ -74,7 +75,6 @@ jobs:
           cd td
             BUILD_TYPE="Debug"
             SYSTEM="Windows"
-            BITNESS="x64"
             echo "Building TDLib for $SYSTEM $HOST_ARCH $BITNESS $BUILD_TYPE"
             TDLIB_DIR="${PWD}/tdlib"
             TDLIB_ZIP="tdlib-$SYSTEM-$HOST_ARCH-$BITNESS-$BUILD_TYPE-$version.zip"          
@@ -88,6 +88,21 @@ jobs:
             echo "compressing to $ARTIFACT_DIR/$TDLIB_ZIP $TDLIB_FILES/*"
             jar -cMf $ARTIFACT_DIR/$TDLIB_ZIP $TDLIB_FILES/*
 
+      - name: Install vcpkg x32
+        if: ${{ env.UPDATE_TDLIB == 'true' }}
+        shell: bash
+        run: |
+          BITNESS="x32"
+          echo "BITNESS=$BITNESS" >> "$GITHUB_ENV"
+
+          cd td
+            rm -rf vcpkg
+            git clone https://github.com/Microsoft/vcpkg.git
+            cd vcpkg
+              git checkout bc3512a509f9d29b37346a7e7e929f9a26e66c7e
+              ./bootstrap-vcpkg.bat
+              ./vcpkg.exe install gperf:$BITNESS-windows openssl:$BITNESS-windows zlib:$BITNESS-windows  
+
       - name: Build TDLib Windows Win32 Release
         if: ${{ env.UPDATE_TDLIB == 'true' }}
         shell: bash
@@ -96,6 +111,8 @@ jobs:
             BUILD_TYPE="Release"
             SYSTEM="Windows"
             BITNESS="Win32"
+            echo "BITNESS=$BITNESS" >> "$GITHUB_ENV"
+            
             echo "Building TDLib for $SYSTEM $HOST_ARCH $BITNESS $BUILD_TYPE"
             TDLIB_DIR="${PWD}/tdlib"
             TDLIB_ZIP="tdlib-$SYSTEM-$HOST_ARCH-$BITNESS-$BUILD_TYPE-$version.zip"
@@ -116,7 +133,6 @@ jobs:
           cd td
             BUILD_TYPE="Debug"
             SYSTEM="Windows"
-            BITNESS="Win32"
             echo "Building TDLib for $SYSTEM $HOST_ARCH $BITNESS $BUILD_TYPE"
             TDLIB_DIR="${PWD}/tdlib"
             TDLIB_ZIP="tdlib-$SYSTEM-$HOST_ARCH-$BITNESS-$BUILD_TYPE-$version.zip"          
