@@ -121,41 +121,8 @@ jobs:
             echo "compressing $TDLIB_ZIP"
             jar -cMf $ARTIFACT_DIR/$TDLIB_ZIP $(ls tdjson/$SYSTEM*/lib/*)
 
-      - name: Cleanup After OpenSSL
-        if: env.UPDATE_TDLIB == 'true'
-        run: |
-          echo "checking space before openssl"
-          df -h .
-          cd td/example/ios
-            rm -rf openssl-* Python-Apple-support/merge
-          cd -
-
-          echo "checking space after openssl and before tmp"
-          df -h .
-          sudo rm -rf /tmp/*
-          sudo rm -rf /var/tmp/*
-          sudo rm -rf /var/log/*
-          echo "checking space after tmp and before brew cleanup"
-          df -h .
-          brew cleanup --prune=all
-          rm -rf ~/Library/Caches/Homebrew/downloads/*
-          echo "checking space after brew cleanup"
-          df -h .
-
-          rm -rf ~/Library/Developer/Xcode/DerivedData
-          rm -rf ~/Library/Caches/com.apple.dt.Xcode
-          cd td
-            git gc --aggressive --prune=now
-            rm -rf .git
-          cd ..
-          echo "checking space after cache cleanup"
-          df -h .          
-
-      - name: Check Disk Space After
-        run: df -h .
-
       - name: Build TDLib for iOS watchOS tvOS visionOS and macOS universal Debug
-        if: env.UPDATE_TDLIB == 'false'
+        if: env.UPDATE_TDLIB == 'true'
         run: |
           cd td/example/ios
             
@@ -170,9 +137,15 @@ jobs:
             
             echo "sed'ing build type Release to Debug"
             sed -i '' 's/DCMAKE_BUILD_TYPE=Release/DCMAKE_BUILD_TYPE=Debug/g' build.sh
-            
+
+            echo "sed'ing build to macOS iOS watchOS"
+            sed -i '' 's/platforms="macOS iOS watchOS tvOS visionOS"/platforms="macOS iOS watchOS"/g' build.sh
             ./build.sh
 
+            echo "sed'ing build to tvOS visionOS"
+            sed -i '' 's/platforms="macOS iOS watchOS"/platforms="tvOS visionOS"/g' build.sh
+            ./build.sh
+            
             SYSTEM="iOS" 
             TDLIB_ZIP="tdlib-$SYSTEM-$BUILD_TYPE-$version.zip"
             echo "compressing $TDLIB_ZIP"
