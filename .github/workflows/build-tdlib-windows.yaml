@@ -88,11 +88,11 @@ jobs:
             echo "compressing to $ARTIFACT_DIR/$TDLIB_ZIP $TDLIB_FILES/*"
             jar -cMf $ARTIFACT_DIR/$TDLIB_ZIP $TDLIB_FILES/*
 
-      - name: Install vcpkg x32
+      - name: Install vcpkg x86
         if: ${{ env.UPDATE_TDLIB == 'true' }}
         shell: bash
         run: |
-          BITNESS="x32"
+          BITNESS="x86"
           echo "BITNESS=$BITNESS" >> "$GITHUB_ENV"
 
           cd td
