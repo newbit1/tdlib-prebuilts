@@ -121,10 +121,48 @@ jobs:
             echo "compressing $TDLIB_ZIP"
             jar -cMf $ARTIFACT_DIR/$TDLIB_ZIP $(ls tdjson/$SYSTEM*/lib/*)
 
-      - name: Build TDLib for iOS watchOS tvOS visionOS and macOS universal Debug
+      - name: Cleanup After OpenSSL
         if: env.UPDATE_TDLIB == 'true'
         run: |
+          echo "checking space before openssl"
+          df -h .
           cd td/example/ios
+            rm -rf openssl-* Python-Apple-support/merge
+          cd ..
+
+          echo "checking space after openssl and before tmp"
+          df -h .
+          sudo rm -rf /tmp/*
+          sudo rm -rf /var/tmp/*
+          sudo rm -rf /var/log/*
+          echo "checking space after tmp and before brew cleanup"
+          df -h .
+          brew cleanup --prune=all
+          rm -rf ~/Library/Caches/Homebrew/downloads/*
+          echo "checking space after brew cleanup"
+          df -h .
+
+          rm -rf ~/Library/Developer/Xcode/DerivedData
+          rm -rf ~/Library/Caches/com.apple.dt.Xcode
+          cd td && git gc --aggressive --prune=now
+          cd ..
+          echo "checking space after cache cleanup"
+          df -h .
+          
+      - name: Maximize Disk Space
+        if: env.UPDATE_TDLIB == 'true'
+        uses: comandrei/maximize-build-disk-space@v1
+        with:
+          remove_dotgit: true
+
+      - name: Check Disk Space After
+        run: df -h .
+
+      - name: Build TDLib for iOS watchOS tvOS visionOS and macOS universal Debug
+        if: env.UPDATE_TDLIB == 'false'
+        run: |
+          cd td/example/ios
+            
             BUILD_TYPE="Debug"
             SYSTEM="iOS-watchOS-tvOS-visionOS-macOS"            
             echo "Building TDLib for $SYSTEM $HOST_ARCH $BUILD_TYPE"    
