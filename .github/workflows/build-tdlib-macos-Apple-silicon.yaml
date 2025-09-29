@@ -41,13 +41,46 @@ jobs:
           echo "ARTIFACT_DIR=$ARTIFACT_DIR" >> $GITHUB_ENV
           printf "commit_message<<EOF\n%s\n%s\nEOF\n" "TDLib Prebuilt Binaries $version" "$commit_hash Update version to $version" >> $GITHUB_ENV
 
-      - name: Build OpenSSL for iOS watchOS tvOS visionOS and macOS
+      - name: Cache Lookup
         if: env.UPDATE_TDLIB == 'true'
+        id: cache-lookup
+        uses: actions/cache@v4
+        with:
+          path: td
+          key: ${{ runner.os }}-openssl-${{ env.version }}-${{ hashFiles('td/example/ios/build-openssl.sh') }}
+          lookup-only: true
+
+      - name: Clean td if cache exists
+        if: |
+          env.UPDATE_TDLIB == 'true' && steps.cache-lookup.outputs.cache-hit == 'true'
+        run: rm -rf td
+
+      - name: Restore Cache (only if hit)
+        if: |
+          env.UPDATE_TDLIB == 'true' && steps.cache-lookup.outputs.cache-hit == 'true'
+        id: cache-restore
+        uses: actions/cache@v4
+        with:
+          path: td
+          key: ${{ runner.os }}-openssl-${{ env.version }}-${{ hashFiles('td/example/ios/build-openssl.sh') }}
+
+      - name: Build OpenSSL for iOS watchOS tvOS visionOS and macOS (only if miss)
+        if: |
+          env.UPDATE_TDLIB == 'true' && steps.cache-lookup.outputs.cache-hit != 'true'
         run: |
           cd td/example/ios
-            SYSTEM="iOS-watchOS-tvOS-visionOS-macOS"             
-            echo "Building OpenSSL for $SYSTEM"
-            ./build-openssl.sh
+          SYSTEM="iOS-watchOS-tvOS-visionOS-macOS"             
+          echo "Building OpenSSL for $SYSTEM"
+          ./build-openssl.sh
+
+      - name: Save Cache (only if miss)
+        if: |
+          env.UPDATE_TDLIB == 'true' && steps.cache-lookup.outputs.cache-hit != 'true'
+        id: cache-save
+        uses: actions/cache@v4
+        with:
+          path: td
+          key: ${{ runner.os }}-openssl-${{ env.version }}-${{ hashFiles('td/example/ios/build-openssl.sh') }}  # Gleicher Key – speichert den gebauten Stand
 
       - name: Build TDLib for iOS watchOS tvOS visionOS and macOS universal Release
         if: env.UPDATE_TDLIB == 'true'
