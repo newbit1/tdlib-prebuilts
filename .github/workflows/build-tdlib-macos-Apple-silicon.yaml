@@ -54,11 +54,11 @@ jobs:
         run: |
           cd td/example/ios
             BUILD_TYPE="Release"
-            BUILD_TYPE="Debug"
             SYSTEM="iOS-watchOS-tvOS-visionOS-macOS"            
             echo "Building TDLib for $SYSTEM $HOST_ARCH $BUILD_TYPE"    
             TDLIB_DIR="${PWD}/tdjson"
             TDLIB_ZIP="tdlib-$SYSTEM-$HOST_ARCH-$BUILD_TYPE-$version.zip"
+            rm -rf $TDLIB_DIR"
 
             echo "sed'ing make to maximum cores"
             sed -i '' 's/make -j3 install/make -j$(sysctl -n hw.ncpu) install/g' build.sh
@@ -67,10 +67,11 @@ jobs:
 
             echo "changing to $TDLIB_DIR"
             echo "compressing to $ARTIFACT_DIR/$TDLIB_ZIP *"
-            cd $TDLIB_DIR && jar -cMf "$ARTIFACT_DIR/$TDLIB_ZIP" *
+            #cd $TDLIB_DIR && jar -cMf "$ARTIFACT_DIR/$TDLIB_ZIP" *
+            cd $TDLIB_DIR && zip -r -s 1g "$ARTIFACT_DIR/$TDLIB_ZIP" .
 
       - name: Build TDLib for iOS watchOS tvOS visionOS and macOS universal Debug
-        if: env.UPDATE_TDLIB == 'true'
+        if: env.UPDATE_TDLIB == 'false'
         run: |
           cd td/example/ios
             BUILD_TYPE="Debug"
@@ -86,7 +87,8 @@ jobs:
 
             echo "changing to $TDLIB_DIR"
             echo "compressing to $ARTIFACT_DIR/$TDLIB_ZIP *"
-            cd $TDLIB_DIR && jar -cMf "$ARTIFACT_DIR/$TDLIB_ZIP" *
+            #cd $TDLIB_DIR && jar -cMf "$ARTIFACT_DIR/$TDLIB_ZIP" *
+            cd $TDLIB_DIR && zip -r -s 1g "$ARTIFACT_DIR/$TDLIB_ZIP" .
 
       - name: Upload To Artifacts Dir
         if: env.UPDATE_TDLIB == 'true'
