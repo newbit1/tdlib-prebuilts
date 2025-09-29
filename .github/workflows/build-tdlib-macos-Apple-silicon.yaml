@@ -151,7 +151,7 @@ jobs:
           
       - name: Maximize Disk Space
         if: env.UPDATE_TDLIB == 'true'
-        uses: comandrei/maximize-build-disk-space@v1
+        uses: easimon/maximize-build-space@v14
         with:
           remove_dotgit: true
 
