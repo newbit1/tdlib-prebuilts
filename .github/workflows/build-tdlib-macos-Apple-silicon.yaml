@@ -81,32 +81,45 @@ jobs:
         with:
           path: td
           key: ${{ runner.os }}-openssl-${{ env.version }}-${{ hashFiles('td/example/ios/build-openssl.sh') }}
-
-      - name: Debug Cache
-        if: env.UPDATE_TDLIB == 'true'
-        run: |
-          echo "UPDATE_TDLIB=false" >> "$GITHUB_ENV"
           
       - name: Build TDLib for iOS watchOS tvOS visionOS and macOS universal Release
-        if: env.UPDATE_TDLIB == 'true'
+        if: env.UPDATE_TDLIB == 'false'
         run: |
           cd td/example/ios
             BUILD_TYPE="Release"
             SYSTEM="iOS-watchOS-tvOS-visionOS-macOS"            
             echo "Building TDLib for $SYSTEM $HOST_ARCH $BUILD_TYPE"    
             TDLIB_DIR="${PWD}/tdjson"
-            TDLIB_ZIP="tdlib-$SYSTEM-$HOST_ARCH-$BUILD_TYPE-$version.zip"
-            rm -rf $TDLIB_DIR
 
             echo "sed'ing make to maximum cores"
             sed -i '' 's/make -j3 install/make -j$(sysctl -n hw.ncpu) install/g' build.sh
             
             ./build.sh
-
-            echo "changing to $TDLIB_DIR"
-            echo "compressing to $ARTIFACT_DIR/$TDLIB_ZIP *"
-            #cd $TDLIB_DIR && jar -cMf "$ARTIFACT_DIR/$TDLIB_ZIP" *
-            cd $TDLIB_DIR && zip -r -s 1g "$ARTIFACT_DIR/$TDLIB_ZIP" .
+            
+            SYSTEM="iOS" 
+            TDLIB_ZIP="tdlib-$SYSTEM-$BUILD_TYPE-$version.zip"
+            echo "compressing $TDLIB_ZIP"
+            jar -cMf $ARTIFACT_DIR/$TDLIB_ZIP $(ls tdjson/$SYSTEM*/lib/*)
+            
+            SYSTEM="macOS" 
+            TDLIB_ZIP="tdlib-$SYSTEM-$BUILD_TYPE-$version.zip"
+            echo "compressing $TDLIB_ZIP"
+            jar -cMf $ARTIFACT_DIR/$TDLIB_ZIP $(ls tdjson/$SYSTEM*/lib/*)
+            
+            SYSTEM="tvOS" 
+            TDLIB_ZIP="tdlib-$SYSTEM-$BUILD_TYPE-$version.zip"
+            echo "compressing $TDLIB_ZIP"
+            jar -cMf $ARTIFACT_DIR/$TDLIB_ZIP $(ls tdjson/$SYSTEM*/lib/*)
+            
+            SYSTEM="visionOS" 
+            TDLIB_ZIP="tdlib-$SYSTEM-$BUILD_TYPE-$version.zip"
+            echo "compressing $TDLIB_ZIP"
+            jar -cMf $ARTIFACT_DIR/$TDLIB_ZIP $(ls tdjson/$SYSTEM*/lib/*)
+            
+            SYSTEM="watchOS" 
+            TDLIB_ZIP="tdlib-$SYSTEM-$BUILD_TYPE-$version.zip"
+            echo "compressing $TDLIB_ZIP"
+            jar -cMf $ARTIFACT_DIR/$TDLIB_ZIP $(ls tdjson/$SYSTEM*/lib/*)
 
       - name: Build TDLib for iOS watchOS tvOS visionOS and macOS universal Debug
         if: env.UPDATE_TDLIB == 'true'
@@ -116,18 +129,40 @@ jobs:
             SYSTEM="iOS-watchOS-tvOS-visionOS-macOS"            
             echo "Building TDLib for $SYSTEM $HOST_ARCH $BUILD_TYPE"    
             TDLIB_DIR="${PWD}/tdjson"
-            TDLIB_ZIP="tdlib-$SYSTEM-$HOST_ARCH-$BUILD_TYPE-$version.zip"
             rm -rf $TDLIB_DIR
 
+            echo "sed'ing make to maximum cores"
+            sed -i '' 's/make -j3 install/make -j$(sysctl -n hw.ncpu) install/g' build.sh
+            
             echo "sed'ing build type Release to Debug"
             sed -i '' 's/DCMAKE_BUILD_TYPE=Release/DCMAKE_BUILD_TYPE=Debug/g' build.sh
             
             ./build.sh
 
-            echo "changing to $TDLIB_DIR"
-            echo "compressing to $ARTIFACT_DIR/$TDLIB_ZIP *"
-            #cd $TDLIB_DIR && jar -cMf "$ARTIFACT_DIR/$TDLIB_ZIP" *
-            cd $TDLIB_DIR && zip -r -s 1g "$ARTIFACT_DIR/$TDLIB_ZIP" .
+            SYSTEM="iOS" 
+            TDLIB_ZIP="tdlib-$SYSTEM-$BUILD_TYPE-$version.zip"
+            echo "compressing $TDLIB_ZIP"
+            jar -cMf $ARTIFACT_DIR/$TDLIB_ZIP $(ls tdjson/$SYSTEM*/lib/*)
+            
+            SYSTEM="macOS" 
+            TDLIB_ZIP="tdlib-$SYSTEM-$BUILD_TYPE-$version.zip"
+            echo "compressing $TDLIB_ZIP"
+            jar -cMf $ARTIFACT_DIR/$TDLIB_ZIP $(ls tdjson/$SYSTEM*/lib/*)
+            
+            SYSTEM="tvOS" 
+            TDLIB_ZIP="tdlib-$SYSTEM-$BUILD_TYPE-$version.zip"
+            echo "compressing $TDLIB_ZIP"
+            jar -cMf $ARTIFACT_DIR/$TDLIB_ZIP $(ls tdjson/$SYSTEM*/lib/*)
+            
+            SYSTEM="visionOS" 
+            TDLIB_ZIP="tdlib-$SYSTEM-$BUILD_TYPE-$version.zip"
+            echo "compressing $TDLIB_ZIP"
+            jar -cMf $ARTIFACT_DIR/$TDLIB_ZIP $(ls tdjson/$SYSTEM*/lib/*)
+            
+            SYSTEM="watchOS" 
+            TDLIB_ZIP="tdlib-$SYSTEM-$BUILD_TYPE-$version.zip"
+            echo "compressing $TDLIB_ZIP"
+            jar -cMf $ARTIFACT_DIR/$TDLIB_ZIP $(ls tdjson/$SYSTEM*/lib/*)
 
       - name: Upload To Artifacts Dir
         if: env.UPDATE_TDLIB == 'true'
