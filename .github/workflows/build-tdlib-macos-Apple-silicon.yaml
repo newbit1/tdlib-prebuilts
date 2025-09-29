@@ -137,39 +137,20 @@ jobs:
             
             echo "sed'ing build type Release to Debug"
             sed -i '' 's/DCMAKE_BUILD_TYPE=Release/DCMAKE_BUILD_TYPE=Debug/g' build.sh
-
-            echo "sed'ing build to macOS iOS watchOS"
-            sed -i '' 's/platforms="macOS iOS watchOS tvOS visionOS"/platforms="macOS iOS watchOS"/g' build.sh
-            ./build.sh
-
-            echo "sed'ing build to tvOS visionOS"
-            sed -i '' 's/platforms="macOS iOS watchOS"/platforms="tvOS visionOS"/g' build.sh
-            ./build.sh
             
-            SYSTEM="iOS" 
-            TDLIB_ZIP="tdlib-$SYSTEM-$BUILD_TYPE-$version.zip"
-            echo "compressing $TDLIB_ZIP"
-            jar -cMf $ARTIFACT_DIR/$TDLIB_ZIP $(ls tdjson/$SYSTEM*/lib/*)
+            sed -i '' 's/#platforms="watchOS"//g' build.sh            
+            platforms="macOS iOS watchOS tvOS visionOS"
             
-            SYSTEM="macOS" 
-            TDLIB_ZIP="tdlib-$SYSTEM-$BUILD_TYPE-$version.zip"
-            echo "compressing $TDLIB_ZIP"
-            jar -cMf $ARTIFACT_DIR/$TDLIB_ZIP $(ls tdjson/$SYSTEM*/lib/*)
-            
-            SYSTEM="tvOS" 
-            TDLIB_ZIP="tdlib-$SYSTEM-$BUILD_TYPE-$version.zip"
-            echo "compressing $TDLIB_ZIP"
-            jar -cMf $ARTIFACT_DIR/$TDLIB_ZIP $(ls tdjson/$SYSTEM*/lib/*)
-            
-            SYSTEM="visionOS" 
-            TDLIB_ZIP="tdlib-$SYSTEM-$BUILD_TYPE-$version.zip"
-            echo "compressing $TDLIB_ZIP"
-            jar -cMf $ARTIFACT_DIR/$TDLIB_ZIP $(ls tdjson/$SYSTEM*/lib/*)
-            
-            SYSTEM="watchOS" 
-            TDLIB_ZIP="tdlib-$SYSTEM-$BUILD_TYPE-$version.zip"
-            echo "compressing $TDLIB_ZIP"
-            jar -cMf $ARTIFACT_DIR/$TDLIB_ZIP $(ls tdjson/$SYSTEM*/lib/*)
+            for platform in $platforms;do
+                echo "sed'ing $platforms with $platform"
+                sed -i '' "s/platforms=\"${platforms}\"/platforms=\"${platform}\"/g" build.sh
+                platforms="$platform"
+                ./build.sh
+                TDLIB_ZIP="tdlib-$platform-$BUILD_TYPE-$version.zip"
+                echo "compressing $TDLIB_ZIP"
+                jar -cMf $ARTIFACT_DIR/$TDLIB_ZIP $(ls tdjson/$platform*/lib/*)
+                rm -rf build
+            done
 
       - name: Upload To Artifacts Dir
         if: env.UPDATE_TDLIB == 'true'
