@@ -86,49 +86,42 @@ jobs:
         if: env.UPDATE_TDLIB == 'true'
         run: |
           cd td/example/ios
-            BUILD_TYPE="Release"
-            SYSTEM="iOS-watchOS-tvOS-visionOS-macOS"            
-            echo "Building TDLib for $SYSTEM $HOST_ARCH $BUILD_TYPE"    
-            TDLIB_DIR="${PWD}/tdjson"
-
             echo "sed'ing commented line out"
             sed -i '' 's/#platforms="watchOS"//g' build.sh
-            
             echo "sed'ing make to maximum cores"
             sed -i '' 's/make -j3 install/make -j$(sysctl -n hw.ncpu) install/g' build.sh
             
-            echo "sed'ing rm build into loop, for saving build space..."
-            sed -i '' '/echo "Platform = \${platform}"/i\'$'\n  cd .. && rm -rf build && mkdir -p build && cd build\n' build.sh
-            
-            ./build.sh
-            
+            BUILD_TYPE="Release"
             eval "$(grep '^platforms=' build.sh)"
+            all_platforms=$platforms
+                  
+            echo "Building TDLib for $platforms $HOST_ARCH $BUILD_TYPE"    
+            TDLIB_DIR="${PWD}/tdjson"
+            
             for platform in $platforms;do
+                echo "sed'ing $platforms with $platform"
+                sed -i '' "s/platforms=\"${platforms}\"/platforms=\"${platform}\"/g" build.sh
+                platforms="$platform"
+                ./build.sh
                 TDLIB_ZIP="tdlib-$platform-$BUILD_TYPE-$version.zip"
                 echo "compressing $TDLIB_ZIP"
                 jar -cMf $ARTIFACT_DIR/$TDLIB_ZIP $(ls tdjson/$platform*/lib/*)
+                rm -rf build
             done
-            echo "platforms=$platforms" >> $GITHUB_ENV
+            sed -i '' "s/platforms=\"${platform}\"/platforms=\"${all_platforms}\"/g" build.sh            
+            echo "platforms=$platforms" >> $GITHUB_ENV  
 
       - name: Build TDLib for iOS watchOS tvOS visionOS and macOS universal Debug
         if: env.UPDATE_TDLIB == 'false'
         run: |
-          cd td/example/ios
-            
-            BUILD_TYPE="Debug"
-            SYSTEM="iOS-watchOS-tvOS-visionOS-macOS"            
-            echo "Building TDLib for $SYSTEM $HOST_ARCH $BUILD_TYPE"    
-            TDLIB_DIR="${PWD}/tdjson"
-            rm -rf $TDLIB_DIR
-
-            #echo "sed'ing make to maximum cores"
-            #sed -i '' 's/make -j3 install/make -j$(sysctl -n hw.ncpu) install/g' build.sh
-            
+          cd td/example/ios            
+            BUILD_TYPE="Debug"  
             echo "sed'ing build type Release to Debug"
             sed -i '' 's/DCMAKE_BUILD_TYPE=Release/DCMAKE_BUILD_TYPE=Debug/g' build.sh
             
-            sed -i '' 's/#platforms="watchOS"//g' build.sh            
-            platforms="macOS iOS watchOS tvOS visionOS"
+            echo "Building TDLib for $platforms $HOST_ARCH $BUILD_TYPE"    
+            TDLIB_DIR="${PWD}/tdjson"
+            rm -rf $TDLIB_DIR
             
             for platform in $platforms;do
                 echo "sed'ing $platforms with $platform"
