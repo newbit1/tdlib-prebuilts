@@ -69,7 +69,7 @@ jobs:
           env.UPDATE_TDLIB == 'true' && steps.cache-lookup.outputs.cache-hit != 'true'
         run: |
           cd td/example/ios
-            SYSTEM="iOS-watchOS-tvOS-visionOS-macOS"             
+            SYSTEM="macOS iOS watchOS tvOS visionOS"             
             echo "Building OpenSSL for $SYSTEM"
             ./build-openssl.sh
 
@@ -109,10 +109,10 @@ jobs:
                 rm -rf build
             done
             sed -i '' "s/platforms=\"${platform}\"/platforms=\"${all_platforms}\"/g" build.sh            
-            echo "platforms=$platforms" >> $GITHUB_ENV  
+            echo "platforms=$all_platforms" >> $GITHUB_ENV  
 
       - name: Build TDLib for iOS watchOS tvOS visionOS and macOS universal Debug
-        if: env.UPDATE_TDLIB == 'false'
+        if: env.UPDATE_TDLIB == 'true'
         run: |
           cd td/example/ios            
             BUILD_TYPE="Debug"  
