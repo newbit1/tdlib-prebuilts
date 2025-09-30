@@ -60,15 +60,17 @@ async def main():
                 reply_to=MESSAGE_THREAD_ID
             )
         else:
-            print(f"[+] Uploading {len(valid_files)} files as album...")
-            await client.send_file(
-                entity,
-                valid_files,
-                caption=COMMIT_MESSAGE,
-                reply_to=MESSAGE_THREAD_ID
-            )
+            chunks = [valid_files[i:i + 10] for i in range(0, len(valid_files), 10)]
+            for chunk in chunks:
+                print(f"[+] Uploading {len(chunk)} files as album...")
+                await client.send_file(
+                    entity,
+                    chunk,
+                    caption=COMMIT_MESSAGE,
+                    reply_to=MESSAGE_THREAD_ID
+                )
         
-        print("[+] Album uploaded successfully!")
+        print("[+] Album(s) uploaded successfully!")
         print("[+] Done!")
 
 if __name__ == "__main__":
