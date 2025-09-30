@@ -15,46 +15,44 @@ jobs:
           fetch-tags: true
           
       - name: Clone TDLib and set version
-        shell: bash
+        shell: pwsh
         run: |
           git clone https://github.com/tdlib/td.git
-          cd td
-            echo "UPDATE_TDLIB=false" >> "$GITHUB_ENV"
-            commit_hash="7d257dcda"
-            version="1.8.55"
-            git checkout $commit_hash
-            echo "version=$version" >> "$GITHUB_ENV"
-            echo "commit_hash=$commit_hash" >> "$GITHUB_ENV"
-            echo "UPDATE_TDLIB=true" >> "$GITHUB_ENV"
-            echo "UPDATE_TDLIB=false" >> "$GITHUB_ENV"
-          cd -
-
-          # Detect real architecture on Windows ARM64 GitHub runner
-          if [[ "$(uname -m)" == "x86_64" ]]; then
-            # Check if we're on ARM64 via PowerShell
-            if powershell -Command "& {(Get-CimInstance Win32_ComputerSystem).SystemType}" | grep -q "ARM64"; then
-              echo "Running on actual ARM64 hardware (emulated x64 shell)"
-              REAL_ARCH="arm64"
-            else
-              REAL_ARCH="x64"
-            fi
-          else
-            REAL_ARCH=$(uname -m)
-          fi
-
-          echo "Detected architecture: $REAL_ARCH"   
-          HOST_ARCH=$(uname -m)
-          echo "HOST_ARCH=$HOST_ARCH"
+          cd td     
+            $commit_hash = "7d257dcda"
+            $version = "1.8.55"
+        
+            # Checkout
+            git checkout $commit_hash      
+          cd ..
+      
+          $systemType = (Get-CimInstance Win32_ComputerSystem).SystemType
+          $realArch = [System.Runtime.InteropServices.RuntimeInformation]::OSArchitecture.ToString().ToLower()
+      
+          if ($systemType -like "*ARM64*") {
+            Write-Host "Running on actual ARM64 hardware (emulated x64 shell)"
+            $hostArch = "arm64"
+          } else {
+            $hostArch = $realArch
+          }
+      
+          # Setze Umgebungsvariable und Ausgabe
+          Add-Content -Path $env:GITHUB_ENV -Value "HOST_ARCH=$hostArch"
+          Add-Content -Path $env:GITHUB_ENV -Value "version=$version"
+          Add-Content -Path $env:GITHUB_ENV -Value "commit_hash=$commit_hash"
+          Add-Content -Path $env:GITHUB_ENV -Value "UPDATE_TDLIB=true"
+          Add-Content -Path $env:GITHUB_ENV -Value "UPDATE_TDLIB=false"
+          Write-Host "realArch: $realArch"
+          Write-Host "HOST_ARCH: $HOST_ARCH"
 
       - name: Install vcpkg x64
         if: ${{ env.UPDATE_TDLIB == 'true' }}
         shell: bash
         run: |
-          HOST_ARCH=$(uname -m)
+
           BITNESS="x64"
           mkdir -p artifacts && ARTIFACT_DIR="${PWD}/artifacts"
           echo "ARTIFACT_DIR=$ARTIFACT_DIR"
-          echo "HOST_ARCH=$HOST_ARCH" >> "$GITHUB_ENV"
           echo "ARTIFACT_DIR=$ARTIFACT_DIR" >> "$GITHUB_ENV"
           echo "BITNESS=$BITNESS" >> "$GITHUB_ENV"
           printf "commit_message<<EOF\n%s\n%s\nEOF\n" "TDLib Prebuilt Binaries $version" "$commit_hash Update version to $version" >> "$GITHUB_ENV"
@@ -87,7 +85,7 @@ jobs:
             jar -cMf $ARTIFACT_DIR/$TDLIB_ZIP $TDLIB_FILES/* 
 
       - name: Build TDLib Windows x64 Debug
-        if: ${{ env.UPDATE_TDLIB == 'true' }}
+        if: ${{ env.UPDATE_TDLIB == 'false' }}
         shell: bash
         run: |
           cd td
