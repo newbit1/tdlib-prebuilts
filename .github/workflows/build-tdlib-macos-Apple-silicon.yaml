@@ -83,7 +83,7 @@ jobs:
           key: ${{ runner.os }}-openssl-${{ env.version }}-${{ hashFiles('td/example/ios/build-openssl.sh') }}
           
       - name: Build TDLib for iOS watchOS tvOS visionOS and macOS universal Release
-        if: env.UPDATE_TDLIB == 'false'
+        if: env.UPDATE_TDLIB == 'true'
         run: |
           cd td/example/ios
             BUILD_TYPE="Release"
@@ -91,35 +91,24 @@ jobs:
             echo "Building TDLib for $SYSTEM $HOST_ARCH $BUILD_TYPE"    
             TDLIB_DIR="${PWD}/tdjson"
 
+            echo "sed'ing commented line out"
+            sed -i '' 's/#platforms="watchOS"//g' build.sh
+            
             echo "sed'ing make to maximum cores"
             sed -i '' 's/make -j3 install/make -j$(sysctl -n hw.ncpu) install/g' build.sh
             
+            echo "sed'ing rm build into loop, for saving build space..."
+            sed -i '' '/echo "Platform = \${platform}"/i\'$'\n  cd .. && rm -rf build && mkdir -p build && cd build\n' build.sh
+            
             ./build.sh
             
-            SYSTEM="iOS" 
-            TDLIB_ZIP="tdlib-$SYSTEM-$BUILD_TYPE-$version.zip"
-            echo "compressing $TDLIB_ZIP"
-            jar -cMf $ARTIFACT_DIR/$TDLIB_ZIP $(ls tdjson/$SYSTEM*/lib/*)
-            
-            SYSTEM="macOS" 
-            TDLIB_ZIP="tdlib-$SYSTEM-$BUILD_TYPE-$version.zip"
-            echo "compressing $TDLIB_ZIP"
-            jar -cMf $ARTIFACT_DIR/$TDLIB_ZIP $(ls tdjson/$SYSTEM*/lib/*)
-            
-            SYSTEM="tvOS" 
-            TDLIB_ZIP="tdlib-$SYSTEM-$BUILD_TYPE-$version.zip"
-            echo "compressing $TDLIB_ZIP"
-            jar -cMf $ARTIFACT_DIR/$TDLIB_ZIP $(ls tdjson/$SYSTEM*/lib/*)
-            
-            SYSTEM="visionOS" 
-            TDLIB_ZIP="tdlib-$SYSTEM-$BUILD_TYPE-$version.zip"
-            echo "compressing $TDLIB_ZIP"
-            jar -cMf $ARTIFACT_DIR/$TDLIB_ZIP $(ls tdjson/$SYSTEM*/lib/*)
-            
-            SYSTEM="watchOS" 
-            TDLIB_ZIP="tdlib-$SYSTEM-$BUILD_TYPE-$version.zip"
-            echo "compressing $TDLIB_ZIP"
-            jar -cMf $ARTIFACT_DIR/$TDLIB_ZIP $(ls tdjson/$SYSTEM*/lib/*)
+            eval "$(grep '^platforms=' build.sh)"
+            for platform in $platforms;do
+                TDLIB_ZIP="tdlib-$platform-$BUILD_TYPE-$version.zip"
+                echo "compressing $TDLIB_ZIP"
+                jar -cMf $ARTIFACT_DIR/$TDLIB_ZIP $(ls tdjson/$platform*/lib/*)
+            done
+            echo "platforms=$platforms" >> $GITHUB_ENV
 
       - name: Build TDLib for iOS watchOS tvOS visionOS and macOS universal Debug
         if: env.UPDATE_TDLIB == 'false'
@@ -132,8 +121,8 @@ jobs:
             TDLIB_DIR="${PWD}/tdjson"
             rm -rf $TDLIB_DIR
 
-            echo "sed'ing make to maximum cores"
-            sed -i '' 's/make -j3 install/make -j$(sysctl -n hw.ncpu) install/g' build.sh
+            #echo "sed'ing make to maximum cores"
+            #sed -i '' 's/make -j3 install/make -j$(sysctl -n hw.ncpu) install/g' build.sh
             
             echo "sed'ing build type Release to Debug"
             sed -i '' 's/DCMAKE_BUILD_TYPE=Release/DCMAKE_BUILD_TYPE=Debug/g' build.sh
@@ -151,27 +140,6 @@ jobs:
                 jar -cMf $ARTIFACT_DIR/$TDLIB_ZIP $(ls tdjson/$platform*/lib/*)
                 rm -rf build
             done
-      
-      - name: Test Upload Album size
-        if: env.UPDATE_TDLIB == 'true'
-        run: |
-          wget -O $ARTIFACT_DIR/fileupload01.zip https://zlib.net/fossils/zlib-1.3.1.tar.gz
-          wget -O $ARTIFACT_DIR/fileupload02.zip https://zlib.net/fossils/zlib-1.3.1.tar.gz
-          wget -O $ARTIFACT_DIR/fileupload03.zip https://zlib.net/fossils/zlib-1.3.1.tar.gz
-          wget -O $ARTIFACT_DIR/fileupload04.zip https://zlib.net/fossils/zlib-1.3.1.tar.gz
-          wget -O $ARTIFACT_DIR/fileupload05.zip https://zlib.net/fossils/zlib-1.3.1.tar.gz
-          wget -O $ARTIFACT_DIR/fileupload06.zip https://zlib.net/fossils/zlib-1.3.1.tar.gz
-          wget -O $ARTIFACT_DIR/fileupload07.zip https://zlib.net/fossils/zlib-1.3.1.tar.gz
-          wget -O $ARTIFACT_DIR/fileupload08.zip https://zlib.net/fossils/zlib-1.3.1.tar.gz
-          wget -O $ARTIFACT_DIR/fileupload09.zip https://zlib.net/fossils/zlib-1.3.1.tar.gz
-          wget -O $ARTIFACT_DIR/fileupload10.zip https://zlib.net/fossils/zlib-1.3.1.tar.gz
-          wget -O $ARTIFACT_DIR/fileupload11.zip https://zlib.net/fossils/zlib-1.3.1.tar.gz
-          wget -O $ARTIFACT_DIR/fileupload12.zip https://zlib.net/fossils/zlib-1.3.1.tar.gz
-          wget -O $ARTIFACT_DIR/fileupload13.zip https://zlib.net/fossils/zlib-1.3.1.tar.gz
-          wget -O $ARTIFACT_DIR/fileupload14.zip https://zlib.net/fossils/zlib-1.3.1.tar.gz
-          wget -O $ARTIFACT_DIR/fileupload15.zip https://zlib.net/fossils/zlib-1.3.1.tar.gz
-          wget -O $ARTIFACT_DIR/fileupload16.zip https://zlib.net/fossils/zlib-1.3.1.tar.gz
-          wget -O $ARTIFACT_DIR/fileupload17.zip https://zlib.net/fossils/zlib-1.3.1.tar.gz
 
       - name: Upload To Artifacts Dir
         if: env.UPDATE_TDLIB == 'true'
