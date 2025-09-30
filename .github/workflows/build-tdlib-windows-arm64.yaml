@@ -26,7 +26,25 @@ jobs:
             echo "version=$version" >> "$GITHUB_ENV"
             echo "commit_hash=$commit_hash" >> "$GITHUB_ENV"
             echo "UPDATE_TDLIB=true" >> "$GITHUB_ENV"
+            echo "UPDATE_TDLIB=false" >> "$GITHUB_ENV"
           cd -
+
+          # Detect real architecture on Windows ARM64 GitHub runner
+          if [[ "$(uname -m)" == "x86_64" ]]; then
+            # Check if we're on ARM64 via PowerShell
+            if powershell -Command "& {(Get-CimInstance Win32_ComputerSystem).SystemType}" | grep -q "ARM64"; then
+              echo "Running on actual ARM64 hardware (emulated x64 shell)"
+              REAL_ARCH="arm64"
+            else
+              REAL_ARCH="x64"
+            fi
+          else
+            REAL_ARCH=$(uname -m)
+          fi
+
+          echo "Detected architecture: $REAL_ARCH"   
+          HOST_ARCH=$(uname -m)
+          echo "HOST_ARCH=$HOST_ARCH"
 
       - name: Install vcpkg x64
         if: ${{ env.UPDATE_TDLIB == 'true' }}
