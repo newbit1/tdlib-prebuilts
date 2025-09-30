@@ -21,8 +21,6 @@ jobs:
           cd td     
             $commit_hash = "7d257dcda"
             $version = "1.8.55"
-        
-            # Checkout
             git checkout $commit_hash      
           cd ..
       
@@ -31,38 +29,44 @@ jobs:
       
           if ($systemType -like "*ARM64*") {
             Write-Host "Running on actual ARM64 hardware (emulated x64 shell)"
-            $hostArch = "arm64"
+            $HOST_ARCH = "arm64"
           } else {
-            $hostArch = $realArch
+            $HOST_ARCH = $realArch
           }
-      
-          # Setze Umgebungsvariable und Ausgabe
-          Add-Content -Path $env:GITHUB_ENV -Value "HOST_ARCH=$hostArch"
+          
+          Add-Content -Path $env:GITHUB_ENV -Value "HOST_ARCH=$HOST_ARCH"
           Add-Content -Path $env:GITHUB_ENV -Value "version=$version"
           Add-Content -Path $env:GITHUB_ENV -Value "commit_hash=$commit_hash"
           Add-Content -Path $env:GITHUB_ENV -Value "UPDATE_TDLIB=true"
-          Add-Content -Path $env:GITHUB_ENV -Value "UPDATE_TDLIB=false"
+          
           Write-Host "realArch: $realArch"
           Write-Host "HOST_ARCH: $HOST_ARCH"
 
       - name: Install vcpkg x64
         if: ${{ env.UPDATE_TDLIB == 'true' }}
-        shell: bash
+        shell: pwsh
         run: |
 
-          BITNESS="x64"
-          mkdir -p artifacts && ARTIFACT_DIR="${PWD}/artifacts"
-          echo "ARTIFACT_DIR=$ARTIFACT_DIR"
-          echo "ARTIFACT_DIR=$ARTIFACT_DIR" >> "$GITHUB_ENV"
-          echo "BITNESS=$BITNESS" >> "$GITHUB_ENV"
-          printf "commit_message<<EOF\n%s\n%s\nEOF\n" "TDLib Prebuilt Binaries $version" "$commit_hash Update version to $version" >> "$GITHUB_ENV"
-          
+          $BITNESS = "x64"
+          New-Item -ItemType Directory -Force -Path artifacts | Out-Null
+          $ARTIFACT_DIR = Join-Path $PWD "artifacts"
+      
+          Write-Host "ARTIFACT_DIR=$ARTIFACT_DIR"
+          Add-Content -Path $env:GITHUB_ENV -Value "ARTIFACT_DIR=$ARTIFACT_DIR"
+          Add-Content -Path $env:GITHUB_ENV -Value "BITNESS=$BITNESS"
+      
+          $commitMsg = "TDLib Prebuilt Binaries $($env:version)`n$($env:commit_hash) Update version to $($env:version)"
+          Add-Content -Path $env:GITHUB_ENV -Value "commit_message<<EOF`n$commitMsg`nEOF"
+      
+          # vcpkg setup
           cd td
             git clone https://github.com/Microsoft/vcpkg.git
             cd vcpkg
-              git checkout bc3512a509f9d29b37346a7e7e929f9a26e66c7e
-              ./bootstrap-vcpkg.bat
-              ./vcpkg.exe install gperf:$BITNESS-windows openssl:$BITNESS-windows zlib:$BITNESS-windows        
+            git checkout bc3512a509f9d29b37346a7e7e929f9a26e66c7e
+            ./bootstrap-vcpkg.bat
+            ./vcpkg.exe install "gperf:`$env:BITNESS-windows" "openssl:`$env:BITNESS-windows" "zlib:`$env:BITNESS-windows"
+
+          Add-Content -Path $env:GITHUB_ENV -Value "UPDATE_TDLIB=false"
       
       - name: Build TDLib Windows x64 Release
         if: ${{ env.UPDATE_TDLIB == 'true' }}
@@ -85,7 +89,7 @@ jobs:
             jar -cMf $ARTIFACT_DIR/$TDLIB_ZIP $TDLIB_FILES/* 
 
       - name: Build TDLib Windows x64 Debug
-        if: ${{ env.UPDATE_TDLIB == 'false' }}
+        if: ${{ env.UPDATE_TDLIB == 'true' }}
         shell: bash
         run: |
           cd td
