@@ -28,6 +28,7 @@ async def main():
     client = create_client()
     
     async with client:
+        CHAT_ID = CHAT_ID.replace("/c/", "/")
         try:
             real_id = int(CHAT_ID)
             print(f"[+] {real_id} is a valid Number")
