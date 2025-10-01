@@ -120,7 +120,7 @@ jobs:
             $ARTIFACT_DIR = ($env:ARTIFACT_DIR).Replace('\', '/')
             Write-Host "Compressing to $ARTIFACT_DIR/$tdlibZip $tdlibFiles/*"
             jar -cMf $ARTIFACT_DIR/$tdlibZip $tdlibFiles/*
-            Add-Content -Path $env:GITHUB_ENV -Value "UPDATE_TDLIB=false"
+            exit 0
             
             $buildType = "Release"
             $system = "Windows"
@@ -147,7 +147,7 @@ jobs:
           #Add-Content -Path $env:GITHUB_ENV -Value "UPDATE_TDLIB=false"
 
       - name: Build TDLib Windows arm64 Debug
-        if: ${{ env.UPDATE_TDLIB == 'true' }}
+        if: ${{ env.UPDATE_TDLIB == 'false' }}
         shell: bash
         run: |
           cd td
