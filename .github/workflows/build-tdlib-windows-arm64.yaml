@@ -60,11 +60,11 @@ jobs:
       
           # vcpkg setup
           cd td
-            #git clone https://github.com/Microsoft/vcpkg.git
-            #cd vcpkg
-            #git checkout bc3512a509f9d29b37346a7e7e929f9a26e66c7e
-            #./bootstrap-vcpkg.bat
-            #./vcpkg.exe install gperf:$BITNESS-windows openssl:$BITNESS-windows zlib:$BITNESS-windows
+            git clone https://github.com/Microsoft/vcpkg.git
+            cd vcpkg
+              git checkout bc3512a509f9d29b37346a7e7e929f9a26e66c7e
+              ./bootstrap-vcpkg.bat
+              ./vcpkg.exe install gperf:$BITNESS-windows openssl:$BITNESS-windows zlib:$BITNESS-windows
       
       - name: Build TDLib Windows arm64 Release
         if: ${{ env.UPDATE_TDLIB == 'true' }}
@@ -73,71 +73,11 @@ jobs:
           cd td
             $buildType = "Release"
             $system = "Windows"
-            
-            $tdlibDir = Join-Path $PWD "tdlib"
-            New-Item -ItemType Directory -Path $tdlibDir -Force | Out-Null
-            Write-Host "Created tdlib dir: $tdlibDir"
-        
-            $binDir = Join-Path $tdlibDir "bin"
-            New-Item -ItemType Directory -Path $binDir -Force | Out-Null
-            Write-Host "Created bin dir: $binDir"
-        
-            $testFile = Join-Path $binDir "zlib-1.3.1.zip"
-            Write-Host "Downloading to: $testFile"
-            Invoke-WebRequest -Uri "https://zlib.net/fossils/zlib-1.3.1.tar.gz" -OutFile $testFile
-        
-            # Überprüfung der Datei
-            if (Test-Path $testFile) {
-              $fileSize = (Get-Item $testFile).Length
-              Write-Host "Download successful! File size: $fileSize bytes"
-            } else {
-              Write-Error "Download failed – file not found!"
-              exit 1
-            }
-
-            $tdlibZip = "tdlib-$($env:HOST_ARCH)-$buildType-$($env:version).zip"
-            $tdlibFiles = "tdlib/bin"
-            $ARTIFACT_DIR = ($env:ARTIFACT_DIR).Replace('\', '/')
-            Write-Host "Compressing to $ARTIFACT_DIR/$tdlibZip $tdlibFiles/*"
-            jar -cMf $ARTIFACT_DIR/$tdlibZip $tdlibFiles/*
-            exit 0
-            
-            $buildType = "Release"
-            $system = "Windows"
         
             Write-Host "Building TDLib for $system $($env:HOST_ARCH) $($env:BITNESS) $buildType"
         
             $tdlibDir = Join-Path $PWD "tdlib"
-            $tdlibZip = "tdlib-$system-$($env:HOST_ARCH)-$($env:BITNESS)-$buildType-$($env:version).zip"
-            $tdlibFiles = "tdlib/bin"
-        
-            Remove-Item -Path $tdlibDir -Recurse -Force -ErrorAction SilentlyContinue
-            Remove-Item -Path build -Recurse -Force -ErrorAction SilentlyContinue
-            New-Item -ItemType Directory -Path build -Force | Out-Null
-            cd build
-              #cmake -A $env:BITNESS -DCMAKE_INSTALL_PREFIX:PATH=$tdlibDir -DCMAKE_TOOLCHAIN_FILE:FILEPATH=../vcpkg/scripts/buildsystems/vcpkg.cmake ..
-          
-              #$parallelJobs = [Environment]::ProcessorCount
-              #cmake --build . --parallel $parallelJobs --target install --config $buildType        
-            cd ..
-        
-          Write-Host "Compressing to $($env:ARTIFACT_DIR)/$tdlibZip $($tdlibFiles)/*"
-          jar -cMf $($env:ARTIFACT_DIR)\$tdlibZip $tdlibFiles\*
-
-          #Add-Content -Path $env:GITHUB_ENV -Value "UPDATE_TDLIB=false"
-
-      - name: Build TDLib Windows arm64 Debug
-        if: ${{ env.UPDATE_TDLIB == 'false' }}
-        shell: bash
-        run: |
-          cd td
-            $buildType = "Debug"
-            $system = "Windows"
-        
-            Write-Host "Building TDLib for $system $($env:HOST_ARCH) $($env:BITNESS) $buildType"
-        
-            $tdlibDir = Join-Path $PWD "tdlib"
-            $tdlibZip = "tdlib-$system-$($env:HOST_ARCH)-$($env:BITNESS)-$buildType-$($env:version).zip"
+            $tdlibZip = "tdlib-$system-$($env:HOST_ARCH)-$buildType-$($env:version).zip"
             $tdlibFiles = "tdlib/bin"
         
             Remove-Item -Path $tdlibDir -Recurse -Force -ErrorAction SilentlyContinue
@@ -150,8 +90,39 @@ jobs:
               cmake --build . --parallel $parallelJobs --target install --config $buildType        
             cd ..
         
-          Write-Host "Compressing to $($env:ARTIFACT_DIR)/$tdlibZip $($tdlibFiles)/*"
-          jar -cMf $($env:ARTIFACT_DIR)\$tdlibZip $tdlibFiles\*
+          $ARTIFACT_DIR = ($env:ARTIFACT_DIR).Replace('\', '/')
+          Write-Host "Compressing to $ARTIFACT_DIR/$tdlibZip $tdlibFiles/*"
+          jar -cMf $ARTIFACT_DIR/$tdlibZip $tdlibFiles/*
+
+          #Add-Content -Path $env:GITHUB_ENV -Value "UPDATE_TDLIB=false"
+
+      - name: Build TDLib Windows arm64 Debug
+        if: ${{ env.UPDATE_TDLIB == 'true' }}
+        shell: bash
+        run: |
+          cd td
+            $buildType = "Debug"
+            $system = "Windows"
+        
+            Write-Host "Building TDLib for $system $($env:HOST_ARCH) $($env:BITNESS) $buildType"
+        
+            $tdlibDir = Join-Path $PWD "tdlib"
+            $tdlibZip = "tdlib-$system-$($env:HOST_ARCH)-$buildType-$($env:version).zip"
+            $tdlibFiles = "tdlib/bin"
+        
+            Remove-Item -Path $tdlibDir -Recurse -Force -ErrorAction SilentlyContinue
+            Remove-Item -Path build -Recurse -Force -ErrorAction SilentlyContinue
+            New-Item -ItemType Directory -Path build -Force | Out-Null
+            cd build
+              cmake -A $env:BITNESS -DCMAKE_INSTALL_PREFIX:PATH=$tdlibDir -DCMAKE_TOOLCHAIN_FILE:FILEPATH=../vcpkg/scripts/buildsystems/vcpkg.cmake ..
+          
+              $parallelJobs = [Environment]::ProcessorCount
+              cmake --build . --parallel $parallelJobs --target install --config $buildType        
+            cd ..
+        
+          $ARTIFACT_DIR = ($env:ARTIFACT_DIR).Replace('\', '/')
+          Write-Host "Compressing to $ARTIFACT_DIR/$tdlibZip $tdlibFiles/*"
+          jar -cMf $ARTIFACT_DIR/$tdlibZip $tdlibFiles/*
             
       - name: Upload To Artifacts Dir
         if: ${{ env.UPDATE_TDLIB == 'true' }}
