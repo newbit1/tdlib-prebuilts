@@ -71,6 +71,9 @@ jobs:
         shell: pwsh
         run: |
           cd td
+            $buildType = "Release"
+            $system = "Windows"
+            
             $tdlibDir = Join-Path $PWD "tdlib"
             New-Item -ItemType Directory -Path $tdlibDir -Force | Out-Null
             Write-Host "Created tdlib dir: $tdlibDir"
@@ -101,11 +104,6 @@ jobs:
             Write-Host "Packing: $tdlibFiles/*"
         
             jar -cMf "$jarDest" "$tdlibFiles/*"
-
-            $tdlibZip = "tdlib-$system-$($env:HOST_ARCH)-$($env:BITNESS)-$buildType-$($env:version).zip"
-            $tdlibFiles = "tdlib\bin"
-            Write-Host "Compressing to $($env:ARTIFACT_DIR)\$tdlibZip $($tdlibFiles)\*"
-            jar -cMf $($env:ARTIFACT_DIR)\$tdlibZip $tdlibFiles\*
         
             # Überprüfung der ZIP
             $zipPath = Join-Path $env:ARTIFACT_DIR $tdlibZip
@@ -115,7 +113,13 @@ jobs:
             } else {
               Write-Error "Jar failed – ZIP not created!"
               exit 1
-            }           
+            }
+
+            $tdlibZip = "tdlib-$($env:HOST_ARCH)-$buildType-$($env:version).zip"
+            $tdlibFiles = "tdlib/bin"
+            $ARTIFACT_DIR = ($env:ARTIFACT_DIR).Replace('\', '/')
+            Write-Host "Compressing to $ARTIFACT_DIR/$tdlibZip $tdlibFiles/*"
+            jar -cMf $ARTIFACT_DIR/$tdlibZip $tdlibFiles/*
             Add-Content -Path $env:GITHUB_ENV -Value "UPDATE_TDLIB=false"
             
             $buildType = "Release"
