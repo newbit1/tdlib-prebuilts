@@ -5,7 +5,7 @@ on:
   
 permissions:
   actions: write
-  contents: read
+  contents: write
   
 jobs:
   test_build:
@@ -66,3 +66,6 @@ jobs:
           body: "$commit_message"
           token: ${{ secrets.GITHUB_TOKEN }}
           artifacts: artifacts/*.zip
+          generate_release_notes: false  # Optional: Keine auto Notes, da du body hast
+          draft: false
+          prerelease: false
