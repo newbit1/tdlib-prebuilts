@@ -97,7 +97,7 @@ jobs:
 
             $tdlibZip = "tdlib-$($env:HOST_ARCH)-$buildType-$($env:version).zip"
             $tdlibFiles = "tdlib/bin"
-            $ARTIFACT_DIR = ($ARTIFACT_DIR).Replace('\', '/')
+            $ARTIFACT_DIR = ($env:ARTIFACT_DIR).Replace('\', '/')
             Write-Host "Compressing to $ARTIFACT_DIR/$tdlibZip $tdlibFiles/*"
             jar -cMf $ARTIFACT_DIR/$tdlibZip $tdlibFiles/*
             exit 0
