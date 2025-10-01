@@ -50,6 +50,7 @@ jobs:
           $BITNESS = "arm64"
           New-Item -ItemType Directory -Force -Path artifacts | Out-Null
           $ARTIFACT_DIR = Join-Path $PWD "artifacts"
+          $ARTIFACT_DIR = ($ARTIFACT_DIR).Replace('\', '/')
       
           Write-Host "ARTIFACT_DIR=$ARTIFACT_DIR"
           Add-Content -Path $env:GITHUB_ENV -Value "ARTIFACT_DIR=$ARTIFACT_DIR"
@@ -94,30 +95,9 @@ jobs:
               Write-Error "Download failed – file not found!"
               exit 1
             }
-        
-            # Jar-Test: Packe tdlib/bin/* (relativ zu td/) in ZIP in artifacts
-            $tdlibFiles = "tdlib/bin"
-            $tdlibZip = "test-zlib.zip"
-            $jarDest = (Join-Path $env:ARTIFACT_DIR $tdlibZip).Replace('\', '/')
-            Write-Host "Jar destination: $jarDest"
-            Write-Host "Current location: $(Get-Location)"
-            Write-Host "Packing: $tdlibFiles/*"
-        
-            jar -cMf "$jarDest" "$tdlibFiles/*"
-        
-            # Überprüfung der ZIP
-            $zipPath = Join-Path $env:ARTIFACT_DIR $tdlibZip
-            if (Test-Path $zipPath) {
-              $zipSize = (Get-Item $zipPath).Length
-              Write-Host "Jar successful! ZIP size: $zipSize bytes"
-            } else {
-              Write-Error "Jar failed – ZIP not created!"
-              exit 1
-            }
 
             $tdlibZip = "tdlib-$($env:HOST_ARCH)-$buildType-$($env:version).zip"
             $tdlibFiles = "tdlib/bin"
-            $ARTIFACT_DIR = ($env:ARTIFACT_DIR).Replace('\', '/')
             Write-Host "Compressing to $ARTIFACT_DIR/$tdlibZip $tdlibFiles/*"
             jar -cMf $ARTIFACT_DIR/$tdlibZip $tdlibFiles/*
             exit 0
