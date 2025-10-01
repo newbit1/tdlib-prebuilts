@@ -98,7 +98,7 @@ jobs:
 
       - name: Build TDLib Windows arm64 Debug
         if: ${{ env.UPDATE_TDLIB == 'true' }}
-        shell: bash
+        shell: pwsh
         run: |
           cd td
             $buildType = "Debug"
