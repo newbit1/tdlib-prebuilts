@@ -74,7 +74,7 @@ jobs:
             $buildType = "Release"
             $system = "Windows"
         
-            Write-Host "Building TDLib for $system $($env:HOST_ARCH) $($env:BITNESS) $buildType"
+            Write-Host "Building TDLib for $system $($env:HOST_ARCH) $buildType"
         
             $tdlibDir = Join-Path $PWD "tdlib"
             $tdlibZip = "tdlib-$system-$($env:HOST_ARCH)-$buildType-$($env:version).zip"
@@ -104,7 +104,7 @@ jobs:
             $buildType = "Debug"
             $system = "Windows"
         
-            Write-Host "Building TDLib for $system $($env:HOST_ARCH) $($env:BITNESS) $buildType"
+            Write-Host "Building TDLib for $system $($env:HOST_ARCH) $buildType"
         
             $tdlibDir = Join-Path $PWD "tdlib"
             $tdlibZip = "tdlib-$system-$($env:HOST_ARCH)-$buildType-$($env:version).zip"
