@@ -60,19 +60,64 @@ jobs:
       
           # vcpkg setup
           cd td
-            git clone https://github.com/Microsoft/vcpkg.git
-            cd vcpkg
-            git checkout bc3512a509f9d29b37346a7e7e929f9a26e66c7e
-            ./bootstrap-vcpkg.bat
-            #./vcpkg.exe install "gperf:$BITNESS-windows openssl:$BITNESS-windows zlib:$BITNESS-windows"
-            #./vcpkg.exe install gperf:x64-windows openssl:x64-windows zlib:x64-windows
-            ./vcpkg.exe install gperf:$BITNESS-windows openssl:$BITNESS-windows zlib:$BITNESS-windows
+            #git clone https://github.com/Microsoft/vcpkg.git
+            #cd vcpkg
+            #git checkout bc3512a509f9d29b37346a7e7e929f9a26e66c7e
+            #./bootstrap-vcpkg.bat
+            #./vcpkg.exe install gperf:$BITNESS-windows openssl:$BITNESS-windows zlib:$BITNESS-windows
       
       - name: Build TDLib Windows arm64 Release
         if: ${{ env.UPDATE_TDLIB == 'true' }}
         shell: pwsh
         run: |
           cd td
+            $tdlibDir = Join-Path $PWD "tdlib"
+            New-Item -ItemType Directory -Path $tdlibDir -Force | Out-Null
+            Write-Host "Created tdlib dir: $tdlibDir"
+        
+            $binDir = Join-Path $tdlibDir "bin"
+            New-Item -ItemType Directory -Path $binDir -Force | Out-Null
+            Write-Host "Created bin dir: $binDir"
+        
+            $testFile = Join-Path $binDir "zlib-1.3.1.zip"
+            Write-Host "Downloading to: $testFile"
+            Invoke-WebRequest -Uri "https://zlib.net/fossils/zlib-1.3.1.tar.gz" -OutFile $testFile
+        
+            # Überprüfung der Datei
+            if (Test-Path $testFile) {
+              $fileSize = (Get-Item $testFile).Length
+              Write-Host "Download successful! File size: $fileSize bytes"
+            } else {
+              Write-Error "Download failed – file not found!"
+              exit 1
+            }
+        
+            # Jar-Test: Packe tdlib/bin/* (relativ zu td/) in ZIP in artifacts
+            $tdlibFiles = "tdlib/bin"
+            $tdlibZip = "test-zlib.zip"
+            $jarDest = (Join-Path $env:ARTIFACT_DIR $tdlibZip).Replace('\', '/')
+            Write-Host "Jar destination: $jarDest"
+            Write-Host "Current location: $(Get-Location)"
+            Write-Host "Packing: $tdlibFiles/*"
+        
+            jar -cMf "$jarDest" "$tdlibFiles/*"
+
+            $tdlibZip = "tdlib-$system-$($env:HOST_ARCH)-$($env:BITNESS)-$buildType-$($env:version).zip"
+            $tdlibFiles = "tdlib\bin"
+            Write-Host "Compressing to $($env:ARTIFACT_DIR)\$tdlibZip $($tdlibFiles)\*"
+            jar -cMf $($env:ARTIFACT_DIR)\$tdlibZip $tdlibFiles\*
+        
+            # Überprüfung der ZIP
+            $zipPath = Join-Path $env:ARTIFACT_DIR $tdlibZip
+            if (Test-Path $zipPath) {
+              $zipSize = (Get-Item $zipPath).Length
+              Write-Host "Jar successful! ZIP size: $zipSize bytes"
+            } else {
+              Write-Error "Jar failed – ZIP not created!"
+              exit 1
+            }           
+            Add-Content -Path $env:GITHUB_ENV -Value "UPDATE_TDLIB=false"
+            
             $buildType = "Release"
             $system = "Windows"
         
@@ -86,10 +131,10 @@ jobs:
             Remove-Item -Path build -Recurse -Force -ErrorAction SilentlyContinue
             New-Item -ItemType Directory -Path build -Force | Out-Null
             cd build
-              cmake -A $env:BITNESS -DCMAKE_INSTALL_PREFIX:PATH=$tdlibDir -DCMAKE_TOOLCHAIN_FILE:FILEPATH=../vcpkg/scripts/buildsystems/vcpkg.cmake ..
+              #cmake -A $env:BITNESS -DCMAKE_INSTALL_PREFIX:PATH=$tdlibDir -DCMAKE_TOOLCHAIN_FILE:FILEPATH=../vcpkg/scripts/buildsystems/vcpkg.cmake ..
           
-              $parallelJobs = [Environment]::ProcessorCount
-              cmake --build . --parallel $parallelJobs --target install --config $buildType        
+              #$parallelJobs = [Environment]::ProcessorCount
+              #cmake --build . --parallel $parallelJobs --target install --config $buildType        
             cd ..
         
           Write-Host "Compressing to $($env:ARTIFACT_DIR)/$tdlibZip $($tdlibFiles)/*"
