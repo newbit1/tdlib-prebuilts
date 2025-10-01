@@ -61,11 +61,10 @@ jobs:
       - name: Release
         uses: ncipollo/release-action@v1
         with:
-          tag: "v$version"
-          name: "$commit_hash Update version to $version"
-          body: "$commit_message"
+          tag: "v${{ env.version }}"
+          name: "${{ env.commit_hash }} Update version to ${{ env.version }}"
+          body: ${{ env.commit_message }}
           token: ${{ secrets.GITHUB_TOKEN }}
           artifacts: artifacts/*.zip
-          generate_release_notes: false  # Optional: Keine auto Notes, da du body hast
           draft: false
-          prerelease: false
+          prerelease: false          
