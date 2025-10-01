@@ -50,7 +50,6 @@ jobs:
           $BITNESS = "arm64"
           New-Item -ItemType Directory -Force -Path artifacts | Out-Null
           $ARTIFACT_DIR = Join-Path $PWD "artifacts"
-          $ARTIFACT_DIR = ($ARTIFACT_DIR).Replace('\', '/')
       
           Write-Host "ARTIFACT_DIR=$ARTIFACT_DIR"
           Add-Content -Path $env:GITHUB_ENV -Value "ARTIFACT_DIR=$ARTIFACT_DIR"
@@ -98,6 +97,7 @@ jobs:
 
             $tdlibZip = "tdlib-$($env:HOST_ARCH)-$buildType-$($env:version).zip"
             $tdlibFiles = "tdlib/bin"
+            $ARTIFACT_DIR = ($ARTIFACT_DIR).Replace('\', '/')
             Write-Host "Compressing to $ARTIFACT_DIR/$tdlibZip $tdlibFiles/*"
             jar -cMf $ARTIFACT_DIR/$tdlibZip $tdlibFiles/*
             exit 0
